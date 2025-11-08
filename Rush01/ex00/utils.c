@@ -16,13 +16,20 @@ uint8_t ft_isdigit(char c)
 	return (0);
 }
 
-uint8_t ft_ishexchar(char *s)
+uint8_t ft_is_allowed_chars(char *s, char *allowed)
 {
     uint8_t i = 0;
+	uint8_t a = 0;
     while (s[i])
     {
-        if (!((s[i] >= '0' && s[i] <= '9')
-			|| (s[i] >= 'A' && s[i] <= 'F')))
+		a = 0;
+		while (allowed[a])
+		{
+			if (s[i] == allowed[a])
+				break;
+			a++;
+		}
+		if (allowed[a] == '\0')
 			return (0);
 		i++;
 	}

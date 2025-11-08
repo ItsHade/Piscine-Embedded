@@ -26,9 +26,15 @@
 // UBRRn = F_CPU / (8 * BAUD) - 1
 #define BAUD_PRESCALER (((F_CPU / (USAR_BAUDRATE * 8UL))) - 1)
 
+#define IS_PRESSED(pin) (!(PIND & (1 << (pin))))
+
 #define BACKSPACE 127
 #define END_OF_INPUT '\r'
 #define NEW_LINE "\r\n"
+#define REMOVE_CHAR "\b \b"
+#define WRONG_FORMAT "\r\nFormat error: 'DD/MM/YYY HH:MM:SS'\r\n"
+#define TIME_SET "\r\nTime has been set\r\n" // probably change text
+#define ALLOWED_CHARS "0123456789/: "
 #define TEXT_COLOR_RESET "\x1B[0m"
 #define TEXT_COLOR_RED "\x1B[31m"
 #define TEXT_COLOR_GREEN "\x1B[32m"
@@ -36,6 +42,7 @@
 
 
 #define INPUT_BUFFER_SIZE 40 // need to be adjusted --> "28/02/2023 18:03:17"
+#define INPUT_FORMAT_SIZE 19
 
 #define MODES_COUNT 3 // don't like the name and only 3 for now (testing) | will be 12 
 // Address
@@ -158,7 +165,7 @@ void debug_print(const char *str);
 // === UTILS FUNCTIONS ===
 
 
-uint8_t ft_ishexchar(char *s);
+uint8_t ft_is_allowed_chars(char *s, char *allowed);
 
 uint16_t ft_strlen(char *s);
 
