@@ -51,3 +51,16 @@ void ft_bzero(void *s, uint16_t n)
 		i++;
 	}
 }
+
+uint16_t ft_strcmp(char *s1, char *s2)
+{
+	uint16_t i = 0;
+	uint16_t a = 0;
+	while (s1[i] && s2[a] && s1[i] == s2[a])
+	{
+		i++;
+		a++;
+	}
+	return (s1[i] - s2[a]);
+}
+

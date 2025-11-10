@@ -35,6 +35,7 @@ void i2c_start(void)
     // return 1; // NACK
 }
 
+
 void i2c_stop(void)
 {
     // TWSTO - TWI STOP Condition Bit: setting TWSTO to 1 in Master mode generates a STOP condition 
@@ -74,13 +75,26 @@ uint8_t i2c_read_nack(void)
 
  
 // maybe rename functions to i2c_exp_ or PCA9555_
-void i2c_set_pin(uint8_t addr, uint8_t command, uint8_t port0)
+void i2c_set_pin(uint8_t addr, uint8_t command, uint8_t port)
 {
     i2c_start();
     i2c_write((addr << 1 ) | I2C_WRITE); 
     i2c_write(command);
-    i2c_write(port0); // re write the whole byte -> probably need to |= and change my defines and enum 
+    i2c_write(port); // re write the whole byte -> probably need to |= and change my defines and enum 
     i2c_stop();
+}
+
+uint8_t i2c_get_pin(uint8_t addr, uint8_t command)
+{
+    uint8_t read = 0;
+    i2c_start();
+    i2c_write((addr << 1) | I2C_WRITE);
+    i2c_write(command);
+    i2c_start();
+    i2c_write((addr << 1) | I2C_READ);
+    read = i2c_read_nack();
+    i2c_stop();
+    return (read);
 }
 
 void i2c_set_pins(uint8_t addr, uint8_t command, uint8_t port0, uint8_t port1)
@@ -169,4 +183,18 @@ void i2c_print_digits(uint8_t addr, uint8_t digit1, uint8_t digit2, uint8_t digi
 void i2c_display_number(uint8_t addr, uint8_t number)
 {
     i2c_set_pin(addr, OUTPUT_PORT_1_COMMAND, number);
+}
+
+void    i2c_multiwrite(uint8_t *data, uint8_t size)
+{
+    for (int i = 0; i < size; i++) {
+        i2c_write(data[i]);
+    }
+}
+
+void    i2c_multiread(uint8_t *data, uint8_t size)
+{
+        for (int i = 0; i < size; i++) {
+        data[i] = i2c_read();
+    }
 }

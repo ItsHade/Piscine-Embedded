@@ -1,6 +1,6 @@
 
 NAME = main
-SRCS = $(NAME).c uart.c utils.c i2c.c timer.c spi.c input.c display.c switch.c function.c sensor_i2c.c rtc.c
+SRCS = $(NAME).c spi.c adc.c uart.c
 # ELF = $(NAME).elf
 BIN = $(NAME).bin
 HEX = $(NAME).hex
@@ -38,9 +38,8 @@ flash:
 clean:
 	$(RM) $(BIN) $(HEX)
 
-uart:
+show: all
 	screen $(PORT) $(BAUDRATE)
 
-show: all uart
 
 .PHONY: all hex flash clean show

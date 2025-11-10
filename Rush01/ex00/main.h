@@ -7,9 +7,14 @@
 #include <stdint.h>
 #include "isr.h"
 
-// for test
-#include <stdio.h>
+//functions0-3
+#include "function.h"
 
+/*
+    uint8_t tab[12] = {DISPLAY_0, DISPLAY_1, DISPLAY_2, DISPLAY_3, DISPLAY_4, DISPLAY_5, DISPLAY_6, DISPLAY_7, DISPLAY_8, DISPLAY_9, DISPLAY_DASH, DISPLAY_DOT};
+    i2c_print_digits(I2C_EXPANDER_ADDR, tab[day / 10], tab[day % 10], tab[month / 10], tab[month % 10]);
+
+*/
 
 #define F_CPU 16000000UL
 #define F_SCL 100000UL
@@ -32,8 +37,9 @@
 #define END_OF_INPUT '\r'
 #define NEW_LINE "\r\n"
 #define REMOVE_CHAR "\b \b"
-#define WRONG_FORMAT "\r\nFormat error: 'DD/MM/YYY HH:MM:SS'\r\n"
+#define WRONG_FORMAT "\r\nUse Format: [DD/MM/YYYY HH:MM:SS]\r\n"
 #define TIME_SET "\r\nTime has been set\r\n" // probably change text
+#define TIME_NOT_ALLOWED "\r\nThis date is not allowed \r\n" // probably change text
 #define ALLOWED_CHARS "0123456789/: "
 #define TEXT_COLOR_RESET "\x1B[0m"
 #define TEXT_COLOR_RED "\x1B[31m"
@@ -43,8 +49,9 @@
 
 #define INPUT_BUFFER_SIZE 40 // need to be adjusted --> "28/02/2023 18:03:17"
 #define INPUT_FORMAT_SIZE 19
+#define TIME_ARRAY_SIZE 7
 
-#define MODES_COUNT 3 // don't like the name and only 3 for now (testing) | will be 12 
+#define MODES_COUNT 11// don't like the name and only 3 for now (testing) | will be 11
 // Address
 // Read bit (high level at SDA) = 1 | Write bit (low level at SDA) = 0
 #define I2C_EXPANDER_ADDR 0x20
@@ -52,27 +59,49 @@
 #define I2C_WRITE 0
 #define I2C_READ 1
 
+#define INPUT_PORT_0_COMMAND 0x00
 #define OUTPUT_PORT_0_COMMAND 0x02
 #define OUTPUT_PORT_1_COMMAND 0x03
 #define CONFIG_PORT_0_COMMAND 0x06
 #define CONFIG_PORT_1_COMMAND 0x07 
 #define ALL_OUTPUT 0x00
+#define ALL_OUTPUT_SWITCH_INPUT 0x01
 #define ALL_INPUT 0xFF
 #define PORT_0_ALL_OFF 0xFF
 #define PORT_0_ALL_ON 0x00
-#define PORT_0_ALL_DIGIT_ON 0x0F
+#define PORT_0_ONLY_DIGITS_ON 0x0F
 
 #define PORT_1_ALL_OFF 0x00
 #define PORT_1_ALL_ON 0xFF
+
+#define D5_RED (1 << PD5)
+#define D5_GREEN (1 << PD6)
+#define D5_BLUE (1 << PD3)
+
+#define LED_D9 0x08
+#define LED_D10 0x04
+#define LED_D11 0x02
 
 // Need rework
 #define ONLY_D9 0xF7
 #define ONLY_D10 0xFB
 #define ONLY_D11 0xFD
 
+#define D9_AND_DIGITS 0x07
+#define D10_AND_DIGITS 0x0B
+#define D11_AND_DIGITS 0x0D
+
+#define SW3 0x01
+
+#define SPI_BRIGHTNESS 0xF0
+#define SPI_BRIGHTNESS_MAX 0xFF
 #define SPI_START_FRAME_BYTE 0x00
 #define SPI_END_FRAME_BYTE 0xFF
 
+#define SPI_ALL_OFF {0x00, 0x00, 0x00}
+#define SPI_ALL_RED {0xFF, 0x00, 0x00}
+#define SPI_ALL_GREEN {0x00, 0xFF, 0x00}
+#define SPI_ALL_BLUE {0x00, 0x00, 0xFF}
 
 // devkit names with binary value to put on
 // USE: Setting CA to 0 means that all 7 segment + dot is ON
@@ -123,6 +152,28 @@ enum Digit
     DISPLAY_DASH = 0x40,
     DISPLAY_DOT = 0x80
 };
+
+// commands of termocensor definitions
+# define AHT20_INIT 0xBE
+# define AHT20_SOFTRST 0xBA
+# define AHT20_STATUS 0x71
+# define AHT20_ADR 0x38
+
+/* Both of next commands are described in part 5.4 of doc */
+# define AHT20_CALIBR (uint8_t[]) {0xBE, 0x08, 0x00}
+# define AHT20_DATA (uint8_t[]) {0xAC, 0x33, 0x00}
+
+/**********  RTC defines  ************/
+
+#define RTC_ADR 0xA2
+
+#define SEC_REGISTER 0x02
+#define MIN_REGISTER 0x03
+#define HOUR_REGISTER 0x04
+#define DAY_REGISTER 0x05
+#define MONTH_REGISTER 0x07
+#define YEAR_REGISTER 0x08
+
  // === I2C FUNCTIONS ===
 
 
@@ -138,11 +189,19 @@ void i2c_start(void);
 
  uint8_t i2c_read_nack(void);
 
+void    i2c_multiwrite(uint8_t *data, uint8_t size);
+
+void    i2c_multiread(uint8_t *data, uint8_t size);
+
 // 7SEGMENTS DISPLAY
 
 void i2c_print_digits(uint8_t addr, uint8_t digit1, uint8_t digit2, uint8_t digit3, uint8_t digit4);
 
-void i2c_set_pin(uint8_t addr, uint8_t command, uint8_t port0);
+void i2c_set_pin(uint8_t addr, uint8_t command, uint8_t port);
+
+void i2c_set_pins(uint8_t addr, uint8_t command, uint8_t port0, uint8_t port1);
+
+uint8_t i2c_get_pin(uint8_t addr, uint8_t command);
 
 // === UART FUNCTIONS ===
 
@@ -152,6 +211,8 @@ void init_uart(void);
 void write_uart(char c);
 
 char read_uart(void);
+
+char read_non_block_uart(void);
 
 void putstr_uart(const char *str);
 
@@ -175,10 +236,13 @@ uint8_t ft_isdigit(char c);
 
 void ft_bzero(void *s, uint16_t n);
 
+uint8_t ft_atouint8(char *str);
 
 // === TIMER FUNCTIONS ===
 
 void init_timer1(uint8_t freq_hz);
+
+void    init_timer0(void);
 
 
 // === SPI FUNCTIONS === 
@@ -192,3 +256,61 @@ void spi_close(void);
 void spi_set_led_all(uint8_t brightness, uint8_t color[3]);
 
 void spi_set_led(uint8_t led, uint8_t brightness, uint8_t color[3]);
+
+
+// === DISPLAY FUNCTION ===
+
+void init_default_led(void);
+
+void clear_all(uint8_t addr);
+
+void init_display(uint8_t addr);
+
+void display_mode_binary(uint8_t mode);
+
+void set_rgb_led(uint8_t color[3]);
+
+// === INPUT FUNCTIONS ===
+
+uint8_t check_input(char *buffer);
+
+uint8_t get_input_uart(char *buffer);
+
+uint8_t *convert_input(char *buffer, uint8_t *time);
+
+
+// === SWITCH FUNCTIONS ===
+
+void initial_check_switch(uint8_t addr);
+
+uint8_t get_input_switch(uint8_t mode);
+
+// === AHT20 FUNCTIONS ===
+
+void    calibrate_Aht20(void);
+
+// === MODE FUNCTIONS ===
+
+uint8_t setup_timer1(uint8_t setup);
+
+uint8_t setup_timers(uint8_t setup);
+
+uint8_t mode4(uint8_t setup);
+
+uint8_t mode6(uint8_t setup);
+
+uint8_t mode7(uint8_t setup);
+
+uint8_t mode8(uint8_t setup);
+
+uint8_t mode9(uint8_t setup);
+
+uint8_t mode10(uint8_t setup);
+
+uint8_t mode11(uint8_t setup);
+
+// === RCT FUNCTIONS ===
+
+void rtc_set_time(uint8_t *uart_input);
+
+uint8_t format_is_valid(uint8_t *uart_input);

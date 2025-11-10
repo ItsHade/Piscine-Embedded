@@ -58,3 +58,16 @@ void ft_bzero(void *s, uint16_t n)
 		i++;
 	}
 }
+
+// only takes str[0] and str[1] 
+uint8_t ft_atouint8(char *str)
+{
+	uint8_t i = 0;
+	uint8_t nb = 0;
+	while (str[i] && i < 2)
+	{
+		nb = nb * 10 + (str[i] - '0');
+		i++;
+	}
+	return (nb);
+}

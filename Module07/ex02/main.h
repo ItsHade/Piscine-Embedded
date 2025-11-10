@@ -9,15 +9,19 @@
 
 #define HEX_TO_DIGIT 48 // + '0'
 #define HEX_TO_UPPERCASE 55 // + 'A' + 10
-#define ADDR_INPUT 0
-#define BYTE_INPUT 1
-#define ADDR_INPUT_SIZE 8
-#define BYTE_INPUT_SIZE 2
-#define INPUT_BUFFER_SIZE 12
-#define MAX_ADDRESS 1023
-#define NB_BYTE_PER_LINE 16
+#define CMD_INPUT 0
+#define KEY_INPUT 1
+#define VALUE_INPUT 2
+#define STR_MAX_SIZE 32
+#define CMD_MAX_SIZE 6
+#define INPUT_BUFFER_SIZE ((STR_MAX_SIZE + 1) * 3 )
 
+#define MAX_ADDRESS 1023
+
+#define NB_BYTE_PER_LINE 16
 #define BACKSPACE_CHAR 127
+#define SPACE_CHAR 32
+#define DOUBLE_QUOTE_CHAR 34
 
 // UART FUNCTIONS
 
@@ -29,9 +33,7 @@
 
 
 #define NEW_LINE "\r\n"
-#define STATUS_STR "Status value: "
-#define WRONG_INPUT "Format: 000001ab f8\r\n"
-#define ADDRESS_RANGE "Valid address range: 00000000 - 000003FF\r\n"
+#define WRONG_INPUT "INPUT HAS WRONG FORMAT!\r\n"
 #define TEXT_COLOR_RESET "\x1B[0m"
 #define TEXT_COLOR_RED "\x1B[31m"
 

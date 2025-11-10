@@ -27,8 +27,6 @@
 
 //
 
-
-
 void init_uart(void)
 {
 	// 20.3 Clock Generation (4 modes)
@@ -53,9 +51,6 @@ void init_uart(void)
 	
 	//20.11.3 Set transmitter bit to 1 (enabled) and set receiver bit to 1 (enabled)
 	UCSR0B |= (1 << TXEN0) | (1 << RXEN0);
-
-	// 20.11.3 Enable Rx complete interrupt 
-	/* UCSR0B |= (1 << RXCIE0); */
 }
 
 void write_uart(char c)
@@ -77,13 +72,6 @@ char read_uart(void)
 
 	// return the data received in the receive buffer
 	return (UDR0);
-}
-
-char read_non_block_uart(void)
-{
-	if ((UCSR0A & (1 << RXC0)))
-		return (UDR0);
-	return (0);
 }
 
 void putstr_uart(const char *str)
@@ -118,4 +106,35 @@ void debug_print(const char *str)
     putstr_uart("[DEBUG] ");
     putstr_uart(str);
     putstr_uart(NEW_LINE);
+}
+
+
+char *get_input_uart(char *buffer, uint16_t bufferSize)
+{
+	char c = 0;
+	uint16_t i = 0;
+	while (1)
+	{
+		c = read_uart();
+		if (c == END_OF_INPUT)
+		{
+			buffer[i] = '\0';
+			break;
+		}
+		else if (c == BACKSPACE)
+		{
+			if (i > 0)
+			{
+				putstr_uart(REMOVE_CHAR);
+				i--;
+			}
+		}
+		else if (i < bufferSize)
+		{
+			buffer[i] = c;
+			i++;
+		}
+		write_uart(c);
+	}
+	return (buffer);
 }
