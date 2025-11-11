@@ -16,6 +16,11 @@ OBJCOPY = avr-objcopy
 # specify cpu frequency and target microcontroller
 CFLAGS = -Os -Wall -Wextra -Werror -DF_CPU=$(F_CPU) -mmcu=$(MCU)
 
+# Enable debug mode: make DEBUG=1
+ifeq ($(DEBUG),1)
+CFLAGS += -DDEBUG
+endif
+
 RM = rm -rf
 
 all: hex flash
@@ -41,5 +46,8 @@ clean:
 show: all
 	screen $(PORT) $(BAUDRATE)
 
+uart:
+	screen $(PORT) $(BAUDRATE)
 
-.PHONY: all hex flash clean show
+
+.PHONY: all hex flash clean show uart

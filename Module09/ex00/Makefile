@@ -1,6 +1,6 @@
 
 NAME = main
-SRCS = $(NAME).c spi.c adc.c uart.c utils.c
+SRCS = $(NAME).c adc.c uart.c utils.c i2c.c
 # ELF = $(NAME).elf
 BIN = $(NAME).bin
 HEX = $(NAME).hex
@@ -15,6 +15,11 @@ OBJCOPY = avr-objcopy
 # -Os optimize for size
 # specify cpu frequency and target microcontroller
 CFLAGS = -Os -Wall -Wextra -Werror -DF_CPU=$(F_CPU) -mmcu=$(MCU)
+
+# Enable debug mode: make DEBUG=1
+ifeq ($(DEBUG),1)
+CFLAGS += -DDEBUG
+endif
 
 RM = rm -rf
 
@@ -38,8 +43,11 @@ flash:
 clean:
 	$(RM) $(BIN) $(HEX)
 
-show: all
-	screen $(PORT) $(BAUDRATE)
+# show: all
+# 	screen $(PORT) $(BAUDRATE)
+
+# uart:
+# 	screen $(PORT) $(BAUDRATE)
 
 
-.PHONY: all hex flash clean show
+.PHONY: all hex flash clean show uart
