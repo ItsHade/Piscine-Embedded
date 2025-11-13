@@ -45,7 +45,7 @@ enum Spi
 {
     LED_D6 = 0,
     LED_D7 = 1,
-    LED_D8 = 2,
+    LED_D8 = 2, 
     LED_ALL = 3
 };
 
