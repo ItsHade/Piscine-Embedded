@@ -50,21 +50,21 @@ void EEPROM_print(uint16_t startAddr, uint16_t stopAddr, uint16_t highlight)
     while (addr < stopAddr)
     {
         a = 0;
-        puthex_uart(0x00);// padding for larger addresses 
-        puthex_uart(0x00);// padding for larger addresses 
-        puthex_uart((uint8_t)(addr >> 8));
-        puthex_uart((uint8_t)addr);
+        puthex_lower_uart(0x00);// padding for larger addresses 
+        puthex_lower_uart(0x00);// padding for larger addresses 
+        puthex_lower_uart((uint8_t)(addr >> 8));
+        puthex_lower_uart((uint8_t)addr);
         write_uart(' ');
         while (a++ < NB_BYTE_PER_LINE)
         {
             if (addr == highlight)
             {
                 putstr_uart(TEXT_COLOR_RED);
-                puthex_uart(EEPROM_read(addr));
+                puthex_lower_uart(EEPROM_read(addr));
                 putstr_uart(TEXT_COLOR_RESET);
             }
             else
-                puthex_uart(EEPROM_read(addr));
+                puthex_lower_uart(EEPROM_read(addr));
             if (addr % 2)
                 write_uart(' ');
             addr++;

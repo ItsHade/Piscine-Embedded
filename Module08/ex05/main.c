@@ -87,22 +87,20 @@ int main(void)
     
     while (1)
     {
+        read = read_adc();
+        value = convert_to_rgb(read);
+        colors[led][mode] = value;
         newMode = check_switch1(mode);
         if (newMode != mode)
-        {
-            read = read_adc();
-            value = convert_to_rgb(read);
-            colors[led][mode] = value;
-
-            spi_set_led_all(SPI_BRIGHTNESS_MAX, colors);
-            mode = newMode;
-        }
+            mode = newMode; // probably useless now
         newLed = check_switch2(led);
         if (newLed != led)
         {
             mode = MODE_R;
             led = newLed;
         }
+        spi_set_led_all(SPI_BRIGHTNESS_MAX, colors);
+
     }
     spi_close();
 }

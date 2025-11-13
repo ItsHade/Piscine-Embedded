@@ -129,7 +129,7 @@ char *get_input_uart(char *buffer, uint16_t bufferSize)
 				i--;
 			}
 		}
-		else if (i < bufferSize)
+		else if (c >= 32 && c <= 126 && i < bufferSize)
 		{
 			buffer[i] = c;
 			i++;

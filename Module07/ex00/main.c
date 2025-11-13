@@ -44,14 +44,14 @@ int main(void)
     while (addr < MAX_ADDRESS)
     {
         a = 0;
-        puthex_uart(0x00);// padding for larger addresses 
-        puthex_uart(0x00);// padding for larger addresses 
-        puthex_uart((uint8_t)(addr >> 8));
-        puthex_uart((uint8_t)addr);
+        puthex_lower_uart(0x00);// padding for larger addresses 
+        puthex_lower_uart(0x00);// padding for larger addresses 
+        puthex_lower_uart((uint8_t)(addr >> 8));
+        puthex_lower_uart((uint8_t)addr);
         write_uart(' ');
         while (a++ < NB_BYTE_PER_LINE)
         {
-            puthex_uart(EEPROM_read(addr));
+            puthex_lower_uart(EEPROM_read(addr));
             if (addr % 2)
                 write_uart(' ');
             addr++;

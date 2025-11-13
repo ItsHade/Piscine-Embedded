@@ -27,7 +27,10 @@
 // UBRRn = F_CPU / (8 * BAUD) - 1
 #define BAUD_PRESCALER (((F_CPU / (USAR_BAUDRATE * 8UL))) - 1)
 
-
+#define BACKSPACE 127
+#define NON_PRINT '.'
+#define END_OF_INPUT '\r'
+#define REMOVE_CHAR "\b \b"
 #define NEW_LINE "\r\n"
 #define STATUS_STR "Status value: "
 #define WRONG_INPUT "Format: 000001ab f8\r\n"
@@ -44,6 +47,8 @@ char read_uart(void);
 void putstr_uart(const char *str);
 
 void puthex_uart(uint8_t hex);
+
+void puthex_lower_uart(uint8_t hex);
 
 void putnbr_uart(uint32_t nbr);
 

@@ -8,130 +8,205 @@
    hold 8-bit data called byte. In Computer Science 1024 is taken as K; so, the capacity of the data
    memory is 1K.
    */
-/* uint8_t input_to_uint8(char *input) */
-/* { */
-/*     uint8_t hex = 0; */
-/*     uint8_t i = 0; */
-/*     uint8_t size = ft_strlen(input); */
 
-/*     while (i < size) */
-/*     { */
-/*         if (ft_isdigit(input[i])) */
-/*             hex = hex * 16 + input[i] - HEX_TO_DIGIT; */
-/*         else */
-/*             hex = hex * 16 + input[i] - HEX_TO_UPPERCASE; */
-/*         i++; */
-/*     } */
-/*     return (hex); */
-/* } */
-
-/* uint32_t input_to_uint32(char *input) */
-/* { */
-/*     uint32_t hex = 0; */
-/*     uint8_t i = 0; */
-/*     uint8_t size = ft_strlen(input); */
-
-/*     while (i < size) */
-/*     { */
-/*         if (ft_isdigit(input[i])) */
-/*             hex = hex * 16 + input[i] - HEX_TO_DIGIT; */
-/*         else */
-/*             hex = hex * 16 +  input[i] - HEX_TO_UPPERCASE; */
-/*         i++; */
-/*     } */
-/*     return (hex); */
-/* } */
-
-/* uint8_t check_input(char **input) */
-/* { */
-/*     input[ADDR_INPUT] = ft_capitalize(input[ADDR_INPUT]); */
-/*     input[BYTE_INPUT] = ft_capitalize(input[BYTE_INPUT]); */
-/*     if (ft_strlen(input[ADDR_INPUT]) > ADDR_INPUT_SIZE || ft_strlen(input[BYTE_INPUT]) != BYTE_INPUT_SIZE) */
-/*         return (0); */
-/*     if (!ft_ishexchar(input[ADDR_INPUT]) || !ft_ishexchar(input[BYTE_INPUT])) */
-/*         return (0); */
-/*     return (1); */ 
-/* } */
-
-char *get_input(char *input)
+uint8_t check_input_format(char *buffer)
 {
-    char c = 0;
-    uint8_t i = 0;
-    while (1)
+    uint16_t i = 0;
+    uint8_t wordCount = 0;
+    uint8_t inDoubleQuotes = 0;
+    uint8_t inSpace = 0;
+    if (!buffer || !buffer[i])
+        return (0);
+    while (buffer[i] && buffer[i] == SPACE_CHAR)
+        i++;
+    if (!buffer[i])
+        return (0);
+    wordCount = 1;
+    while (buffer[i])
     {
-        c = read_uart();
-        if (c == '\r')
-        {
-            input[i] = '\0';
-            break;
-        }
-        else if (c == BACKSPACE_CHAR)
-        {
-            if (i > 0)
-            {
-                putstr_uart("\b \b");
-                i--;
-            }
-        }
-        else if (i < INPUT_BUFFER_SIZE)
-        {
-            input[i] = c;
-            i++;
-        }
-        write_uart(c);
+        if (buffer[i] != SPACE_CHAR && inSpace && !inDoubleQuotes)
+            wordCount++;
+        if (buffer[i] == SPACE_CHAR)
+            inSpace = 1;
+        else
+            inSpace = 0;
+        if (buffer[i] == DOUBLE_QUOTE_CHAR)
+            inDoubleQuotes = !inDoubleQuotes;
+        #ifdef DEBUG 
+            putstr_uart("===============\r\n");
+            putstr_uart("i: ");
+            putnbr_uart(i);
+            putstr_uart(NEW_LINE);
+            putstr_uart("char: ");
+            write_uart(buffer[i]);
+            putstr_uart(NEW_LINE);
+            putstr_uart("inQuotes: ");
+            putnbr_uart(inDoubleQuotes);
+            putstr_uart(NEW_LINE);
+            putstr_uart("inSpace: ");
+            putnbr_uart(inSpace);
+            putstr_uart(NEW_LINE);
+            putstr_uart("wordCount: ");
+            putnbr_uart(wordCount);
+            putstr_uart(NEW_LINE);
+        #endif
+        i++;
     }
-    putstr_uart(NEW_LINE);
-    return (input);
+    if (wordCount > MAX_WORD_COUNT || inDoubleQuotes)
+        return (0);
+    return (1);
 }
 
 uint8_t split_input(char *buffer, char **input)
 {
-    uint8_t i = 0;
-    uint8_t a = 0;
-    // COMMAND
-    while (buffer[i] && buffer[i] != SPACE_CHAR)
-    {
-        input[CMD_INPUT][a] = buffer[i];
+    uint16_t i = 0;
+    uint16_t a = 0;
+    uint8_t inSpace = 0;
+    uint8_t inDoubleQuotes = 0;
+    uint8_t wordCount = 0;
+    while (buffer[i] && buffer[i] == SPACE_CHAR)
         i++;
-        a++;
-    }
-    input[CMD_INPUT][a] = 0;
-    if (!buffer[i] || !buffer[i + 1] || buffer[i + 1] != DOUBLE_QUOTE_CHAR)
-        return (putstr_uart("1\r\n"), 1);
-    a = 0;
-    i += 2;
-    // KEY
-    while (buffer[i] && buffer[i] != DOUBLE_QUOTE_CHAR)
+    wordCount = 1;
+    while (buffer[i])
     {
-        input[KEY_INPUT][a] = buffer[i];
+        if (buffer[i] != SPACE_CHAR && inSpace && !inDoubleQuotes)
+        {
+            input[wordCount][a] = '\0';
+            wordCount++;
+            a = 0;
+        }
+        if (buffer[i] == SPACE_CHAR && !inDoubleQuotes)
+            inSpace = 1;
+        else
+            inSpace = 0;
+        if (buffer[i] == DOUBLE_QUOTE_CHAR)
+            inDoubleQuotes = !inDoubleQuotes;
+        if (!inSpace)
+        {
+            input[wordCount - 1][a] = buffer[i];
+            a++;
+        }
         i++;
-        a++;
     }
-    input[KEY_INPUT][a] = 0;
-    // VALUE
-    if (!buffer[i] || !buffer[i + 1] || buffer[i + 1] != SPACE_CHAR) // can combine with next if
-        return (putstr_uart("3\r\n"), 1);
-    a = 0;
-    i += 2;
-    if (!buffer[i] || buffer[i] != DOUBLE_QUOTE_CHAR)
-        return (putstr_uart("4\r\n"), 1);
-    i++;
-    while (buffer[i] && buffer[i] != DOUBLE_QUOTE_CHAR)
-    {
-        input[VALUE_INPUT][a] = buffer[i];
-        i++;
-        a++;
-    }
-    input[VALUE_INPUT][a] = 0;
-    if (buffer[++i])
-        return (putstr_uart("5\r\n"), 1);
     return (0);
 }
 
-// uint8_t check_input(input)
-// {
-//     if (ft_strcmp(input[0], WRITE_CMD)
-// }
+// "key" --> key
+char *remove_doublequotes(char *str)
+{
+    uint16_t i = 0;
+    if (str[i] && str[i] == DOUBLE_QUOTE_CHAR)
+        str += 1;
+    while (str[i])
+    {
+        if (str[i] == DOUBLE_QUOTE_CHAR)
+        {
+            str[i] = 0;
+            break;
+        }
+        i++;
+    }
+    return (str);
+}
+
+uint32_t check_key_exists(char *key)
+{
+    uint32_t addr = 0;
+    char chunk[CHUNK_SIZE + 1];
+    while (addr < MAX_EEPROM_ADDRESS)
+    {
+        if (EEPROM_read(addr) == MAGIC_VALUE)
+        {
+            EEPROM_read_chunk(addr + 1, chunk, CHUNK_SIZE);
+            #ifdef DEBUG
+                putstr_uart("check_key_exists(): \r\n");
+                putstr_uart("chunk: ");
+                putstr_uart(chunk);
+                putstr_uart(NEW_LINE);
+                putstr_uart("key: ");
+                putstr_uart(key);
+                putstr_uart(NEW_LINE);
+            #endif
+            // read chunk for key
+            if (!ft_strcmp(chunk, key))
+                return (addr); // return addr of magic value
+        }
+        addr += CHUNK_SIZE * 2 + 1;
+    }
+    return (INVALID_EEPROM_ADDR);
+}
+
+uint8_t execute_write(char *key, char *value)
+{
+    uint32_t addr = 0;
+    if (!key || !key[0] || !value || !value[0])
+        return (putstr_uart(WRONG_INPUT), 0);
+    if (check_key_exists(key) != INVALID_EEPROM_ADDR)
+        return (putstr_uart(ALREADY_EXISTS),0);
+    while (addr < MAX_EEPROM_ADDRESS && EEPROM_read(addr) == MAGIC_VALUE)
+        addr += CHUNK_SIZE * 2 + ADDR_SIZE;
+    if (addr >= MAX_EEPROM_ADDRESS || (addr + CHUNK_SIZE * 2) >= MAX_EEPROM_ADDRESS)
+        return (putstr_uart(NO_SPACE_LEFT), 0);
+    EEPROM_write(addr, MAGIC_VALUE);
+    addr++;
+    EEPROM_write_chunk(addr, key, CHUNK_SIZE);
+    addr += CHUNK_SIZE;
+    EEPROM_write_chunk(addr, value, CHUNK_SIZE);
+    #ifdef DEBUG
+            putstr_uart("KEY and VALUE written in EEPROM\r\n");
+    #endif
+    return (0);
+}
+
+uint8_t execute_read(char *key)
+{
+    char chunk[CHUNK_SIZE + 1];
+    uint32_t addr = 0;
+    if (!key || !key[0])
+        return (putstr_uart(WRONG_INPUT), 0);
+    addr = check_key_exists(key);
+    if (addr == INVALID_EEPROM_ADDR)
+        return (putstr_uart(EMPTY), 0);
+    addr += CHUNK_SIZE + 1; // to get the value addr
+    putstr_uart(EEPROM_read_chunk(addr, chunk, CHUNK_SIZE));
+    putstr_uart(NEW_LINE);
+    return (0);
+}
+
+uint8_t execute_print(void)
+{
+    EEPROM_print_c(START_EEPROM_ADDRESS, MAX_EEPROM_ADDRESS, INVALID_EEPROM_ADDR, NB_BYTE_PER_LINE);    
+    return (0);
+}
+
+uint8_t execute_forget(char *key)
+{
+    uint16_t addr = 0;
+    if (!key || !key[0])
+        return (putstr_uart(WRONG_INPUT), 0);
+    addr = check_key_exists(key);
+    if (addr == INVALID_EEPROM_ADDR)
+        return (putstr_uart(NOT_FOUND), 0);
+    EEPROM_write(addr, 0);
+    #ifdef DEBUG
+        putstr_uart("key forgotten\r\n");
+    #endif
+    return (0);
+}
+
+uint8_t check_command(char **input)
+{
+    if (!ft_strcmp(input[CMD_INPUT], WRITE_COMMAND))
+        return (execute_write(input[KEY_INPUT], input[VALUE_INPUT]), 1);
+    else if (!ft_strcmp(input[CMD_INPUT], READ_COMMAND))
+        return (execute_read(input[KEY_INPUT]), 1);
+    else if (!ft_strcmp(input[CMD_INPUT], PRINT_COMMAND))
+        return (execute_print(), 1);
+    else if (!ft_strcmp(input[CMD_INPUT], FORGET_COMMAND))
+        return (execute_forget(input[KEY_INPUT]), 1);
+    return (0);
+}
+
 
 int main(void)
 {
@@ -141,12 +216,10 @@ int main(void)
     char value[STR_MAX_SIZE];
     char buffer[INPUT_BUFFER_SIZE];
 
-    input[0] = command;
-    input[1] = key;
-    input[2] = value;
+    input[CMD_INPUT] = command;
+    input[KEY_INPUT] = key;
+    input[VALUE_INPUT] = value;
     input[3] = NULL;
-    /* uint32_t addr = 0; */
-    uint8_t i = 0;
     init_uart();
 
     while (1)
@@ -155,25 +228,29 @@ int main(void)
         ft_bzero(command, STR_MAX_SIZE);
         ft_bzero(key, STR_MAX_SIZE);
         ft_bzero(value, STR_MAX_SIZE);
-        get_input(buffer);
-        if (split_input(buffer, input))
+        putstr_uart("> ");
+        get_input_uart(buffer, INPUT_BUFFER_SIZE);
+        if (!check_input_format(buffer))
         {
             putstr_uart(WRONG_INPUT);
-            continue;
+            continue ;
         }
-        // TEST
-        i = 0;
-        while (input[i])
+        split_input(buffer, input);
+        input[KEY_INPUT] = remove_doublequotes(input[KEY_INPUT]);
+        input[VALUE_INPUT] = remove_doublequotes(input[VALUE_INPUT]);
+        #ifdef DEBUG
+            uint16_t i = 0;
+            while (input[i])
+            {
+                putstr_uart("input: ");
+                putstr_debug_uart(input[i], '|');
+                putstr_uart(NEW_LINE);
+                i++;
+            }
+        #endif
+        if (!check_command(input))
         {
-            putstr_uart("[DEBUG] Input: ");
-            putstr_uart(input[i]);
-            putstr_uart(NEW_LINE);
-            i++;
-        }
-        if (check_input(input))
-        {
-            putstr_uart(WRONG_INPUT);
-            continue;
+            putstr_uart(UNKNOWN_COMMAND);
         }
     }
 }

@@ -89,6 +89,13 @@ void puthex_uart(uint8_t hex)
 	write_uart(hexa[hex & 0x0F]);
 }
 
+void puthex_lower_uart(uint8_t hex)
+{
+	const char *hexa = "0123456789abcdef";
+	write_uart(hexa[hex >> 4]);
+	write_uart(hexa[hex & 0x0F]);
+}
+
 void putnbr_uart(uint32_t nbr)
 {
 	if (nbr <= 9)
@@ -106,4 +113,36 @@ void debug_print(const char *str)
     putstr_uart("[DEBUG] ");
     putstr_uart(str);
     putstr_uart(NEW_LINE);
+}
+
+
+char *get_input_uart(char *buffer, uint16_t bufferSize)
+{
+	char c = 0;
+	uint16_t i = 0;
+	while (1)
+	{
+		c = read_uart();
+		if (c == END_OF_INPUT)
+		{
+			buffer[i] = '\0';
+			break;
+		}
+		else if (c == BACKSPACE)
+		{
+			if (i > 0)
+			{
+				putstr_uart(REMOVE_CHAR);
+				i--;
+			}
+		}
+		else if (i < bufferSize)
+		{
+			buffer[i] = c;
+			i++;
+		}
+		write_uart(c);
+	}
+	putstr_uart(NEW_LINE);
+	return (buffer);
 }
