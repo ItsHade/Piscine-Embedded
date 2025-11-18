@@ -1,0 +1,2 @@
+- [ ] Try to make library work (code used in piscine embedded)
+- [ ] make 1 cool project with LCD module
