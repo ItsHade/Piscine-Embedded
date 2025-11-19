@@ -1,6 +1,6 @@
 
 NAME = main
-SRCS = $(NAME).c 
+SRCS = $(NAME).c uart.c 
 ELF = $(NAME).elf
 # BIN = $(NAME).bin
 HEX = $(NAME).hex
@@ -29,7 +29,7 @@ all: $(HEX) flash
 
 # compile and link to an ELF
 $(ELF): $(SRCS)
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(SRCS) -o $@
 
 # convert ELF to hex
 $(HEX): $(ELF)
@@ -41,11 +41,11 @@ flash: $(HEX)
 clean:
 	$(RM) $(ELF) $(HEX)
 
-# show: all
-# 	screen $(PORT) $(BAUDRATE)
+show: all
+	screen $(PORT) $(BAUDRATE)
 
-# uart:
-# 	screen $(PORT) $(BAUDRATE)
+uart:
+	screen $(PORT) $(BAUDRATE)
 
 
 .PHONY: all hex flash clean show uart

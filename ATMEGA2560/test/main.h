@@ -148,11 +148,11 @@ enum Spi
 
 // === UART FUNCTIONS === 
 
-#define USAR_BAUDRATE 115200
+#define UART_BAUDRATE 115200
 // Equation for Calculating Baud Rate Register Setting (UBBRn) in asynchronous double speed mode
 // BAUD = F_CPU / (8 * (UBRRn + 1))
 // UBRRn = F_CPU / (8 * BAUD) - 1
-#define BAUD_PRESCALER (((F_CPU / (USAR_BAUDRATE * 8UL))) - 1)
+#define BAUD_PRESCALER (((F_CPU / (UART_BAUDRATE * 8UL))) - 1)
 
 #define INT_TO_CHAR_DIGIT 48
 #define BACKSPACE 127

@@ -1,33 +1,33 @@
-#include "main.h"
+#include "atmega2560.h"
 
 /* // UART FUNCTIONS */
 
-/* #define USAR_BAUDRATE 115200 */
+/* #define UART_BAUDRATE 115200 */
 /* // Equation for Calculating Baud Rate Register Setting (UBBRn) in asynchronous double speed mode */
 /* // BAUD = F_CPU / (8 * (UBRRn + 1)) */
 /* // UBRRn = F_CPU / (8 * BAUD) - 1 */
-/* #define BAUD_PRESCALER (((F_CPU / (USAR_BAUDRATE * 8UL))) - 1) */
+/* #define BAUD_PRESCALER (((F_CPU / (UART_BAUDRATE * 8UL))) - 1) */
 
 
 /* #define NEW_LINE "\r\n" */
 
-/* void init_uart(void); */
+/* void uart_init(void); */
 
-/* void write_uart(char c); */
+/* void uart_write(char c); */
 
-/* char read_uart(void); */
+/* char uart_read(void); */
 
-/* void putstr_uart(const char *str); */
+/* void uart_putstr(const char *str); */
 
-/* void puthex_uart(uint8_t hex); */
+/* void uart_puthex(uint8_t hex); */
 
-/* void putnbr_uart(uint16_t nbr); */
+/* void uart_putnbr(uint16_t nbr); */
 
-/* void debug_print(const char *str); */
+/* void uart_debug_print(const char *str); */
 
 //
 
-void init_uart(void)
+void uart_init(void)
 {
 	// 20.3 Clock Generation (4 modes)
 	// Double Speed (asynchronous mode only)
@@ -53,7 +53,7 @@ void init_uart(void)
 	UCSR0B |= (1 << TXEN0) | (1 << RXEN0);
 }
 
-void write_uart(char c)
+void uart_write(char c)
 {
 	// 20.11.2
 	// Do nothing until UDR is ready (wait for empty transmit buffer)
@@ -65,7 +65,7 @@ void write_uart(char c)
 	UDR0 = c;
 }
 
-char read_uart(void)
+char uart_read(void)
 {
 	// If RXC0 bit is set to 1 it mean that there is undread data in the receive buffer
 	while (!(UCSR0A & (1 << RXC0))) {}
@@ -74,48 +74,60 @@ char read_uart(void)
 	return (UDR0);
 }
 
-void putstr_uart(const char *str)
+void uart_putstr(const char *str)
 {
 	while (*str)
 	{
-		write_uart(*str++);
+		uart_write(*str++);
 	}
 }
 
-void puthex_uart(uint8_t hex)
+void uart_puthex(uint8_t hex)
 {
 	const char *hexa = "0123456789ABCDEF";
-	write_uart(hexa[hex >> 4]);
-	write_uart(hexa[hex & 0x0F]);
+	uart_write(hexa[hex >> 4]);
+	uart_write(hexa[hex & 0x0F]);
 }
 
-void putnbr_uart(uint32_t nbr)
+void uart_putbin(uint8_t hex)
 {
-	if (nbr <= 9)
-		write_uart(nbr + '0');
-	else
+	uint8_t i = 0;
+	const char *bin = "01";
+	while (i < 8)
 	{
-		putnbr_uart(nbr / 10);
-		putnbr_uart(nbr % 10);
+		uart_write(bin[1 & (hex >> i)]);
+		i++;
 	}
 }
 
 
-void debug_print(const char *str)
+void uart_putnbr(uint32_t nbr)
 {
-    putstr_uart("[DEBUG] ");
-    putstr_uart(str);
-    putstr_uart(NEW_LINE);
+	if (nbr <= 9)
+		uart_write(nbr + '0');
+	else
+	{
+		uart_putnbr(nbr / 10);
+		uart_putnbr(nbr % 10);
+	}
 }
 
 
-char *get_input_uart(char *buffer, uint16_t bufferSize)
+void uart_debug_print(const char *str)
+{
+    uart_putstr("[DEBUG] ");
+    uart_putstr(str);
+    uart_putstr(NEW_LINE);
+}
+
+
+char *uart_get_input(char *buffer, uint16_t bufferSize)
 {
 	char c = 0;
 	uint16_t i = 0;
 	while (1)
 	{
-		c = read_uart();
+		c = uart_read();
 		if (c == END_OF_INPUT)
 		{
 			buffer[i] = '\0';
@@ -125,7 +137,7 @@ char *get_input_uart(char *buffer, uint16_t bufferSize)
 		{
 			if (i > 0)
 			{
-				putstr_uart(REMOVE_CHAR);
+				uart_putstr(REMOVE_CHAR);
 				i--;
 			}
 		}
@@ -134,8 +146,8 @@ char *get_input_uart(char *buffer, uint16_t bufferSize)
 			buffer[i] = c;
 			i++;
 		}
-		write_uart(c);
+		uart_write(c);
 	}
-	putstr_uart(NEW_LINE);
+	uart_putstr(NEW_LINE);
 	return (buffer);
 }
