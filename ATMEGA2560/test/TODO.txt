@@ -1,6 +1,0 @@
-- [ ] make library for led and 1digit 7segments display (with digital pin selection)
-- [ ] Try to make library work (code used in piscine embedded)
-    - [x] uart (+ reworked functions definitions)
-- [ ] figure out how to use 4x4 keypad
-    - [ ] make library to use it (with digital pin selection)
-- [ ] make 1 cool project with LCD module
