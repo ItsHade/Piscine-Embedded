@@ -55,13 +55,13 @@ ISR(TIMER1_COMPA_vect)
 void init_timer()
 {
 	// Timer1
-	TCCR1A |= (1 << WGM12); // Mode 2 (CTC)
+	TCCR1B |= (1 << WGM12); // Mode 2 (CTC)
 	TIMSK1 |= (1 << OCIE1A); // Enable Timer1 Compare match A interrupt
 
 	OCR1A = TOP;
 
 	// Timer1 prescaler = 256
-	TCCR1B |= (1 << CS12); 
+	TCCR1B |= (1 << CS12);
 }
 
 void init_led()
@@ -79,7 +79,7 @@ void init_switch()
 	// Set PD2 and PD4 to HIGH
 	PORTD |= (1 << PD2);
 	PORTD |= (1 << PD4);
-	
+
 	// Switch 1 (PD2 / INT0)
 	// Choose mode: falling edge (HIGH to LOW) on INT0 generates an interrupt request
 	EICRA |= (1 << ISC01);

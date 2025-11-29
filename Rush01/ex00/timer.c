@@ -10,7 +10,7 @@ void    init_timer0(void) {
     TCCR0A |= (1 << WGM01);
     // Maths has been done outside code, its the value at which top is atteined every 80 ms
     OCR0A = 195;
-    // enable interrupts on comapare match a 
+    // enable interrupts on comapare match a
     TIMSK0 |= (1 << OCIE0A);
 }
 
@@ -20,13 +20,13 @@ void    init_timer1(uint8_t freq_hz)
     TCNT1 = 0;
      // Set CS12 to one, modifying clock select.
     // CTC mode ; top will be OCR1A
-    TCCR1A |= (1 << WGM12);
-    // calculate 
+    TCCR1B |= (1 << WGM12);
+    // calculate
     uint16_t top = (F_CPU / (2 * TIMER1_PRESCALER * freq_hz) - 1);
     OCR1A = top;
-    // Enable interrupts on timer 1, then interrupts on CTC match for OCR1a 
+    // Enable interrupts on timer 1, then interrupts on CTC match for OCR1a
     TIMSK1 |= (1 << OCIE1A);
-    
+
     // Now timer 1 will increment every 256 ticks
     TCCR1B |= (1 << CS12);
 }

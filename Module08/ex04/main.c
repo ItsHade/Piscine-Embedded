@@ -6,13 +6,13 @@ void    init_timer1(uint16_t freq_hz)
     TCNT1 = 0;
      // Set CS12 to one, modifying clock select.
     // CTC mode ; top will be OCR1A
-    TCCR1A |= (1 << WGM12);
-    // calculate 
+    TCCR1B |= (1 << WGM12);
+    // calculate
     uint32_t top = (F_CPU / (2UL * TIMER1_PRESCALER * (uint32_t)freq_hz) - 1);
     OCR1A = (uint16_t)top;
-    // Enable interrupts on timer 1, then interrupts on CTC match for OCR1a 
+    // Enable interrupts on timer 1, then interrupts on CTC match for OCR1a
     TIMSK1 |= (1 << OCIE1A);
-    
+
     // Now timer 1 will increment every 1024 ticks
     TCCR1B |= (1 << CS11);
 }
@@ -26,7 +26,7 @@ void set_rgb(uint8_t r, uint8_t g, uint8_t b, uint8_t led)
 {
     // {LED_D6, LED_D7, LED_D8}
     uint8_t color[3] = {r, g, b};
-    static uint8_t colors[3][3] = {SPI_COLOR_OFF, SPI_COLOR_OFF, SPI_COLOR_OFF}; 
+    static uint8_t colors[3][3] = {SPI_COLOR_OFF, SPI_COLOR_OFF, SPI_COLOR_OFF};
 
     if (led == LED_D6 || led == LED_ALL)
         ft_memcpy(colors[0], color, sizeof(color));
@@ -40,16 +40,16 @@ void set_rgb(uint8_t r, uint8_t g, uint8_t b, uint8_t led)
 
 void wheel(uint8_t pos) {
 	pos = 255 - pos;
-	if (pos < 85) 
+	if (pos < 85)
 	{
 		set_rgb(255 - pos * 3, 0, pos * 3, LED_ALL);
-	} 
-	else if (pos < 170) 
+	}
+	else if (pos < 170)
 	{
 		pos = pos - 85;
 		set_rgb(0, pos * 3, 255 - pos * 3, LED_ALL);
-	} 
-	else 
+	}
+	else
 	{
 		pos = pos - 170;
 		set_rgb(pos * 3, 255 - pos * 3, 0, LED_ALL);

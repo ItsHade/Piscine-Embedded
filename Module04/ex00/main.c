@@ -36,7 +36,7 @@ void init_switch()
 	DDRD &= ~(1 << PD2);
 	// Set PD2 to HIGH
 	PORTD |= (1 << PD2);
-	
+
 	// Choose mode: falling edge (HIGH to LOW) on INT0 generates an interrupt request
 	EICRA |= (1 << ISC01);
 	// (default value)
@@ -51,13 +51,13 @@ void init_switch()
 void init_timer()
 {
 	// Timer1
-	TCCR1A |= (1 << WGM12); // Mode 2 (CTC)
+	TCCR1B |= (1 << WGM12); // Mode 2 (CTC)
 	TIMSK1 |= (1 << OCIE1A); // Enable Timer1 Compare match A interrupt
 
 	OCR1A = TOP;
 
 	// Timer1 prescaler = 256
-	TCCR1B |= (1 << CS12); 
+	TCCR1B |= (1 << CS12);
 }
 
 int main(void)

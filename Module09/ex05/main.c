@@ -7,7 +7,7 @@ void    init_timer1(uint8_t freq_hz)
     TCNT1 = 0;
      // Set CS12 to one, modifying clock select.
     // CTC mode ; top will be OCR1A
-    TCCR1A |= (1 << WGM12);
+    TCCR1B |= (1 << WGM12);
     // calculate 
     uint16_t top = (F_CPU / (2 * TIMER1_PRESCALER * freq_hz) - 1);
     OCR1A = top;
